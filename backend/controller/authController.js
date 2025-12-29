@@ -6,9 +6,12 @@ const { isStrongPassword, isValidEmail } = require('../utils/validation');
 
 const register= async (req,res) =>{
 try{
-    const {email,password}=req.body
-     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password required' });
+    const { firstname, lastname, email, password } = req.body
+     if (!firstname || !lastname || !email || !password) {
+      return res.status(400).json({ message: 'Firstname, lastname, email and password required' });
+    }
+    if (!String(firstname).trim() || !String(lastname).trim()) {
+      return res.status(400).json({ message: 'Firstname and lastname required' });
     }
 if(!isValidEmail(email)){
     return res.status(400).json({ message: 'Invalid email format' });
@@ -24,6 +27,8 @@ if(!isStrongPassword(password)){
     const hashedPassword = await bcrypt.hash(password, 10);
 // Create the user document in MongoDB
     const newUser = await User.create({
+      firstname: String(firstname).trim(),
+      lastname: String(lastname).trim(),
       email,
       password: hashedPassword,
       role: 'user'

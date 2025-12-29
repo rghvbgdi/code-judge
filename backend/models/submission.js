@@ -7,9 +7,11 @@ const submissionSchema = new mongoose.Schema({
         required: true,
         index: true, // Index for faster queries by user
     },
-    problemNumber: {
-        type: Number,
+    problemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Problem',
         required: true,
+        index: true,
     },
     language: {
         type: String,

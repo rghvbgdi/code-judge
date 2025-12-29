@@ -35,4 +35,4 @@ const requireAuth = (options = {}) => {
   };
 };
 
-module.export =  requireAuth ;
+module.exports = { requireAuth };

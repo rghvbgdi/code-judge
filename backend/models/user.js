@@ -28,10 +28,9 @@ const userSchema = new mongoose.Schema({
         default: 'user',
     },
     solvedProblems: {
-        type: [Number], // Storing an array of problem numbers for easy lookup
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Problem' }],
         default: [],
     },
 }, { timestamps: true });
 
-module.export = mongoose.model('User', userSchema);
-
+module.exports = mongoose.model('User', userSchema);
