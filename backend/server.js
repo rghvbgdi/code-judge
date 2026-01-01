@@ -20,6 +20,21 @@ app.get('/',(req,res) =>{
     res.send("hello world is coming from backend")
 }) ;
 
+// Initialize database connection for Lambda
+let dbInitialized = false;
+const initializeDB = async () => {
+  if (!dbInitialized) {
+    await DBConnection();
+    dbInitialized = true;
+  }
+};
+
+// Middleware to ensure DB is connected before routes
+app.use(async (req, res, next) => {
+  await initializeDB();
+  next();
+});
+
 // Load routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/problems', require('./routes/problemRoutes'));

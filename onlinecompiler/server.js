@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const serverless = require('serverless-http');
 
 const compilerController = require('./controllers/compilerController');
 
@@ -26,7 +27,13 @@ app.get('/', (req, res) => {
 app.post('/run', compilerController.runCode);
 app.post('/submit', compilerController.submitCode);
 
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Compiler service running on port ${PORT}`);
-});
+// Export for Lambda
+module.exports.handler = serverless(app);
+
+// Start server only locally
+if (process.env.AWS_LAMBDA_FUNCTION_NAME === undefined) {
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, () => {
+    console.log(`Compiler service running on port ${PORT}`);
+  });
+}
