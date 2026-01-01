@@ -6,7 +6,7 @@ const API = axios.create({
 });
 
 const CompilerAPI = axios.create({
-  baseURL: import.meta.env.VITE_COMPILER_API_URL || import.meta.env.VITE_BACKEND_URL2 || 'http://localhost:4000',
+  baseURL: import.meta.env.VITE_COMPILER_API_URL || import.meta.env.VITE_BACKEND_URL2 || 'http://localhost:8000',
   withCredentials: true,
 });
 
