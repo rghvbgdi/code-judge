@@ -34,6 +34,16 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  console.log("🚀 Incoming Request Path:", req.path);
+  
+  // The Fix: Strip the AWS prefix if it exists
+  if (req.url.startsWith('/backend')) {
+    req.url = req.url.replace('/backend', '');
+    console.log("🔄 Rewrote URL to:", req.url);
+  }
+  next();
+});
 app.get('/',(req,res) =>{
     res.send("hello world is coming from backend")
 }) ;
