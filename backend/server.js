@@ -4,35 +4,39 @@ const express = require('express')
 const cookieParser = require('cookie-parser');
 const {DBConnection}= require("./config/database.js");
 const cors = require('cors');
-
-
+const serverless = require('serverless-http');
 
 const app = express();
 
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', // or wherever your frontend runs
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   credentials: true
 }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//req = client sends all the data in this 
-//res = server sends all teh data in this back to the client
 app.get('/',(req,res) =>{
-    res.send("hello world is coming from backend")//to test if the routes are working
-}) 
-;
-(async ()=>{
-    await DBConnection();
-  app.use('/api/auth', require('./routes/authRoutes'));
-  app.use('/api/problems', require('./routes/problemRoutes'));
-  app.use('/api/user', require('./routes/userRoutes'));
-  app.use('/api/gemini', require('./routes/geminiRoutes'));
-  app.use('/api/submission', require('./routes/submissionRoutes'));
+    res.send("hello world is coming from backend")
+}) ;
 
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-})();
+// Load routes
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/problems', require('./routes/problemRoutes'));
+app.use('/api/user', require('./routes/userRoutes'));
+app.use('/api/gemini', require('./routes/geminiRoutes'));
+app.use('/api/submission', require('./routes/submissionRoutes'));
+
+// Export for Lambda
+module.exports.handler = serverless(app);
+
+// Start server only locally
+if (process.env.AWS_LAMBDA_FUNCTION_NAME === undefined) {
+  (async ()=>{
+      await DBConnection();
+      const PORT = process.env.PORT || 5000;
+      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })();
+}
 
 
