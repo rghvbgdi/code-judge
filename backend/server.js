@@ -9,7 +9,23 @@ const serverless = require('serverless-http');
 const app = express();
 
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", // dynamic origin
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow specific origins
+    const allowedOrigins = [
+      process.env.CLIENT_ORIGIN || "http://localhost:5173",
+      "https://d2lestbzjzaj5z.cloudfront.net",
+      "http://localhost:5173"
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true, // Allow cookies/auth headers
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]

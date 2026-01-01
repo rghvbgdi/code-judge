@@ -20,6 +20,15 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware to normalize AWS API Gateway paths
+app.use((req, res, next) => {
+  // If request comes from AWS with /compiler prefix, strip it off
+  if (req.path.startsWith('/compiler')) {
+    req.url = req.url.replace('/compiler', '');
+  }
+  next();
+});
+
 app.get('/', (req, res) => {
   res.send('compiler service running');
 });
