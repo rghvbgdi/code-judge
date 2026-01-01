@@ -9,8 +9,10 @@ const serverless = require('serverless-http');
 const app = express();
 
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-  credentials: true
+  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", // dynamic origin
+  credentials: true, // Allow cookies/auth headers
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 app.use(cookieParser());
 app.use(express.json());
