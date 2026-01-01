@@ -8,11 +8,11 @@ on:
       - 'frontend/**'
       - 'backend/**'
       - 'onlinecompiler/**'
-  workflow_dispatch:
+      - '.github/**'  # ✅ ADDED: Triggers deployment when you change this YAML file
+  workflow_dispatch:  # Allows manual button click
 
 env:
   AWS_REGION: ap-south-1
-  # These pull directly from your GitHub Secrets
   BACKEND_API_GATEWAY_URL: ${{ secrets.BACKEND_API_URL }}
   COMPILER_API_GATEWAY_URL: ${{ secrets.COMPILER_API_URL }}
 
@@ -20,7 +20,7 @@ jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'frontend/') 
+    # ❌ REMOVED the 'if' condition so it always runs when triggered
     
     steps:
       - name: Checkout Repository
@@ -43,23 +43,21 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
-          # Pass the secrets to the build process
           export VITE_BACKEND_URL=${{ secrets.BACKEND_API_URL }}
           export VITE_BACKEND_URL2=${{ secrets.COMPILER_API_URL }}
           npm run build
 
       - name: Deploy Frontend to S3
         run: |
-          # ⚠️ REPLACE 'YOUR_UNIQUE_BUCKET_NAME' WITH THE ACTUAL NAME YOU CREATED ⚠️
+          # ⚠️ Ensure this is your correct bucket name
           aws s3 sync frontend/dist/ s3://code-judge-frontend-raghav-2026/ --delete
           
-          # Uses the Secret ID for CloudFront invalidation
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
 
   deploy-backend:
     name: Deploy Backend
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'backend/')
+    # ❌ REMOVED the 'if' condition
     
     steps:
       - name: Checkout Repository
@@ -95,7 +93,7 @@ jobs:
   deploy-compiler:
     name: Deploy Compiler
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'onlinecompiler/')
+    # ❌ REMOVED the 'if' condition
     
     steps:
       - name: Checkout Repository
