@@ -46,11 +46,11 @@ app.get('/', (req, res) => {
     res.send("hello world is coming from backend");
 });
 
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/problems', require('./routes/problemRoutes'));
-app.use('/api/user', require('./routes/userRoutes'));
-app.use('/api/gemini', require('./routes/geminiRoutes'));
-app.use('/api/submission', require('./routes/submissionRoutes'));
+app.use('/auth', require('./routes/authRoutes'));
+app.use('/problems', require('./routes/problemRoutes'));
+app.use('/user', require('./routes/userRoutes'));
+app.use('/gemini', require('./routes/geminiRoutes'));
+app.use('/submission', require('./routes/submissionRoutes'));
 
 // --- 5. Exports ---
 module.exports = app;
