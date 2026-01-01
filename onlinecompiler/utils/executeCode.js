@@ -42,7 +42,9 @@ const executeCode = async (language, jobId, filePath, inputFilePath, options = {
 
   // Compiled languages (C/C++) need a place to write the produced executable.
   // We keep binaries in tmp/outputs so we can clean them up if needed and avoid name collisions.
-  const outDir = path.join(process.cwd(), 'tmp', 'outputs');
+  // In Lambda, we must use /tmp directory for all file operations
+  const baseDir = process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : process.cwd();
+  const outDir = path.join(baseDir, 'tmp', 'outputs');
   await fs.mkdir(outDir, { recursive: true }); // Native FS is cleaner than exec(mkdir)
 
   const outputFile = path.join(outDir, `${jobId}.out`);

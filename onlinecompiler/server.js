@@ -27,11 +27,11 @@ app.get('/', (req, res) => {
 app.post('/run', compilerController.runCode);
 app.post('/submit', compilerController.submitCode);
 
-// Export for Lambda
-module.exports.handler = serverless(app);
+// Export app for Lambda
+module.exports = app;
 
 // Start server only locally
-if (process.env.AWS_LAMBDA_FUNCTION_NAME === undefined) {
+if (require.main === module) {
   const PORT = process.env.PORT || 8000;
   app.listen(PORT, () => {
     console.log(`Compiler service running on port ${PORT}`);

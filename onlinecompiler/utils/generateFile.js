@@ -2,7 +2,8 @@ const fs = require('fs/promises');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const dirCodes = path.join(process.cwd(), 'tmp', 'codes');
+// In Lambda, we must use /tmp directory for all file operations
+const dirCodes = path.join(process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : process.cwd(), 'tmp', 'codes');
 
 const extensionForLanguage = (language) => {
   if (language === 'c') return 'c';

@@ -44,11 +44,11 @@ app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/gemini', require('./routes/geminiRoutes'));
 app.use('/api/submission', require('./routes/submissionRoutes'));
 
-// Export for Lambda
-module.exports.handler = serverless(app);
+// Export app for Lambda
+module.exports = app;
 
 // Start server only locally
-if (process.env.AWS_LAMBDA_FUNCTION_NAME === undefined) {
+if (require.main === module) {
   (async ()=>{
       await DBConnection();
       const PORT = process.env.PORT || 5000;
