@@ -8,19 +8,18 @@ on:
       - 'frontend/**'
       - 'backend/**'
       - 'onlinecompiler/**'
-      - '.github/**'  # ✅ ADDED: Triggers deployment when you change this YAML file
-  workflow_dispatch:  # Allows manual button click
+      - '.github/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: ap-south-1
-  BACKEND_API_GATEWAY_URL: ${{ secrets.BACKEND_API_URL }}
-  COMPILER_API_GATEWAY_URL: ${{ secrets.COMPILER_API_URL }}
+  # ✅ NEW: Single CloudFront domain for all API calls
+  CLOUDFRONT_DOMAIN: ${{ secrets.CLOUDFRONT_DOMAIN }}
 
 jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    # ❌ REMOVED the 'if' condition so it always runs when triggered
     
     steps:
       - name: Checkout Repository
@@ -31,6 +30,7 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,21 +43,25 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
-          export VITE_BACKEND_URL=${{ secrets.BACKEND_API_URL }}
-          export VITE_BACKEND_URL2=${{ secrets.COMPILER_API_URL }}
+          # ✅ FIXED: Pass CloudFront domain, NOT API Gateway URLs
+          export VITE_CLOUDFRONT_DOMAIN=https://${{ secrets.CLOUDFRONT_DOMAIN }}
+          export VITE_BACKEND_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}/api
+          export VITE_COMPILER_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}/compiler
           npm run build
 
       - name: Deploy Frontend to S3
         run: |
-          # ⚠️ Ensure this is your correct bucket name
           aws s3 sync frontend/dist/ s3://code-judge-frontend-raghav-2026/ --delete
-          
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_ID }} \
+            --paths "/*"
 
   deploy-backend:
-    name: Deploy Backend
+    name: Deploy Backend Lambda
     runs-on: ubuntu-latest
-    # ❌ REMOVED the 'if' condition
     
     steps:
       - name: Checkout Repository
@@ -82,18 +86,18 @@ jobs:
       - name: Zip Backend Lambda
         run: |
           cd backend
-          zip -r ../backend-api.zip . -x "*.git*"
+          zip -r ../backend-api.zip . -x "*.git*" -x "*node_modules/.cache*"
 
       - name: Deploy Backend Lambda
         run: |
           aws lambda update-function-code \
             --function-name code-judge-backend \
-            --zip-file fileb://backend-api.zip
+            --zip-file fileb://backend-api.zip \
+            --region ${{ env.AWS_REGION }}
 
   deploy-compiler:
-    name: Deploy Compiler
+    name: Deploy Compiler Lambda
     runs-on: ubuntu-latest
-    # ❌ REMOVED the 'if' condition
     
     steps:
       - name: Checkout Repository
@@ -118,10 +122,11 @@ jobs:
       - name: Zip Compiler Lambda
         run: |
           cd onlinecompiler
-          zip -r ../compiler-api.zip . -x "*.git*"
+          zip -r ../compiler-api.zip . -x "*.git*" -x "*node_modules/.cache*"
 
       - name: Deploy Compiler Lambda
         run: |
           aws lambda update-function-code \
             --function-name code-judge-compiler \
-            --zip-file fileb://compiler-api.zip
+            --zip-file fileb://compiler-api.zip \
+            --region ${{ env.AWS_REGION }}
