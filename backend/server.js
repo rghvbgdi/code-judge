@@ -1,85 +1,65 @@
 require('dotenv').config();
 
-const express = require('express')
+const express = require('express');
 const cookieParser = require('cookie-parser');
-const {DBConnection}= require("./config/database.js");
+const { DBConnection } = require("./config/database.js");
 const cors = require('cors');
-const serverless = require('serverless-http');
 
 const app = express();
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow specific origins
-    const allowedOrigins = [
-      process.env.CLIENT_ORIGIN || "http://localhost:5173",
-      "https://d2lestbzjzaj5z.cloudfront.net",
-      "http://localhost:5173"
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow cookies/auth headers
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
-}));
+// --- 1. CORS Configuration ---
+// Industry Standard: Dynamic origin checking with credentials support
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+   credentials: true }));
+
+// --- 2. Standard Middleware ---
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  console.log("🚀 Incoming Request Path:", req.path);
-  
-  // The Fix: Strip the AWS prefix if it exists
-  if (req.url.startsWith('/backend')) {
-    req.url = req.url.replace('/backend', '');
-    console.log("🔄 Rewrote URL to:", req.url);
-  }
-  next();
-});
-app.get('/',(req,res) =>{
-    res.send("hello world is coming from backend")
-}) ;
-
-// Initialize database connection for Lambda
+// --- 3. Database Initialization ---
+// First Principle: Singleton Connection
+// Ensures we don't create thousands of connections in a Lambda environment
 let dbInitialized = false;
 const initializeDB = async () => {
   if (!dbInitialized) {
-    await DBConnection();
-    dbInitialized = true;
+    try {
+      await DBConnection();
+      dbInitialized = true;
+      console.log("✅ Database connection established");
+    } catch (error) {
+      console.error("❌ Database connection failed:", error);
+    }
   }
 };
 
-// Middleware to ensure DB is connected before routes
+// Middleware to ensure DB is ready before any route is hit
 app.use(async (req, res, next) => {
   await initializeDB();
   next();
 });
 
-// Load routes
+// --- 4. Routes ---
+// These are "Pure" routes. They don't know about '/backend' 
+// because AWS API Gateway (Stage) will strip that prefix for us.
+app.get('/', (req, res) => {
+    res.send("hello world is coming from backend");
+});
+
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/problems', require('./routes/problemRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/gemini', require('./routes/geminiRoutes'));
 app.use('/api/submission', require('./routes/submissionRoutes'));
 
-// Export app for Lambda
+// --- 5. Exports ---
 module.exports = app;
 
-// Start server only locally
+// Local Development Server
 if (require.main === module) {
-  (async ()=>{
+  (async () => {
       await DBConnection();
       const PORT = process.env.PORT || 5000;
-      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+      app.listen(PORT, () => console.log(`🚀 Backend running locally on port ${PORT}`));
   })();
 }
-
-
