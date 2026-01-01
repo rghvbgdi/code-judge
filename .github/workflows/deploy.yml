@@ -45,8 +45,8 @@ jobs:
           npm ci
           # ✅ FIXED: Pass CloudFront domain, NOT API Gateway URLs
           export VITE_CLOUDFRONT_DOMAIN=https://${{ secrets.CLOUDFRONT_DOMAIN }}
-          export VITE_BACKEND_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}/api
-          export VITE_COMPILER_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}/compiler
+          export VITE_BACKEND_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}
+          export VITE_COMPILER_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}
           npm run build
 
       - name: Deploy Frontend to S3
