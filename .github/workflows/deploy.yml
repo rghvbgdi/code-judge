@@ -12,7 +12,7 @@ on:
 
 env:
   AWS_REGION: ap-south-1
-  # Now these pull directly from your GitHub Secrets
+  # These pull directly from your GitHub Secrets
   BACKEND_API_GATEWAY_URL: ${{ secrets.BACKEND_API_URL }}
   COMPILER_API_GATEWAY_URL: ${{ secrets.COMPILER_API_URL }}
 
@@ -50,9 +50,10 @@ jobs:
 
       - name: Deploy Frontend to S3
         run: |
-          aws s3 sync frontend/dist/ s3://code-judge-frontend/ --delete
+          # ⚠️ REPLACE 'YOUR_UNIQUE_BUCKET_NAME' WITH THE ACTUAL NAME YOU CREATED ⚠️
+          aws s3 sync frontend/dist/ s3://code-judge-frontend-raghav-2026/ --delete
           
-          # Uses the Secret ID for CloudFront
+          # Uses the Secret ID for CloudFront invalidation
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
 
   deploy-backend:
