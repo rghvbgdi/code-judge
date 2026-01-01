@@ -17,8 +17,8 @@ app.get('/', (req, res) => {
 });
 
 // ROUTES
-app.post('/run', compilerController.runCode);
-app.post('/submit', compilerController.submitCode);
+app.post('/compiler/run', compilerController.runCode);
+app.post('/compiler/submit', compilerController.submitCode);
 
 module.exports = app;
 
